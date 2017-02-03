@@ -4,7 +4,7 @@
 
 #define APPLICATION_NAME "CapsNumScroll"
 
-#define WINDOW_SIZE 80
+#define WINDOW_SIZE 75
 
 #define HIDE_WINDOW_TIMER_EVENT 0x1010
 #define HIDE_WINDOW_TIMER_INTERVAL 1000
@@ -37,7 +37,7 @@ HideWindowTimerProc(HWND hwnd, UINT uMsg, UINT_PTR idEvent, DWORD dwTime);
 enum { CAPS_LOCK = 20, NUM_LOCK, SCROLL_LOCK };
 
 int CALLBACK
-WinMain(HINSTANCE hInstance, HINSTANCE hPreviousInstance, LPSTR lpCmdLine, int nCmdShow)
+WinMain(HINSTANCE hInstance, HINSTANCE, LPSTR, int)
 {
     EnumDisplayMonitors(NULL, NULL, MonitorEnumProc, 0);
 
@@ -54,12 +54,13 @@ WinMain(HINSTANCE hInstance, HINSTANCE hPreviousInstance, LPSTR lpCmdLine, int n
 
     RegisterClassEx(&wndcls);
 
+    int margin = (int)(1.5 * WINDOW_SIZE);
     mainWindow = CreateWindowEx(WS_EX_NOACTIVATE | WS_EX_TOPMOST | WS_EX_TRANSPARENT,
                                 APPLICATION_NAME "Window",
                                 APPLICATION_NAME,
                                 WS_POPUP | WS_BORDER,
-                                primaryRect.right - (1.5*WINDOW_SIZE),
-                                primaryRect.bottom - (1.5*WINDOW_SIZE),
+                                primaryRect.right - margin,
+                                primaryRect.bottom - margin,
                                 WINDOW_SIZE,
                                 WINDOW_SIZE,
                                 NULL,
@@ -165,7 +166,7 @@ DisplayKeyState(DWORD keyCode)
 }
 
 BOOL CALLBACK
-MonitorEnumProc(HMONITOR hMonitor, HDC hdcMonitor, LPRECT lprcMonitor, LPARAM dwData)
+MonitorEnumProc(HMONITOR hMonitor, HDC, LPRECT, LPARAM)
 {
     MONITORINFOEX info;
     info.cbSize = sizeof(MONITORINFOEX);
@@ -183,7 +184,7 @@ MonitorEnumProc(HMONITOR hMonitor, HDC hdcMonitor, LPRECT lprcMonitor, LPARAM dw
 }
 
 VOID CALLBACK
-HideWindowTimerProc(HWND hwnd, UINT uMsg, UINT_PTR idEvent, DWORD dwTime)
+HideWindowTimerProc(HWND hwnd, UINT, UINT_PTR, DWORD)
 {
     KillTimer(hwnd, HIDE_WINDOW_TIMER_EVENT);
     ShowWindow(hwnd, SW_HIDE);
