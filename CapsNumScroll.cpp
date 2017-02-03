@@ -11,7 +11,6 @@
 #define NOTIFY_ICON_EVENT WM_USER + 0x1011
 #define MENU_QUIT WM_USER + 0x1012
 
-
 static BOOL running;
 static HWND mainWindow;
 static RECT primaryRect;
@@ -55,17 +54,17 @@ WinMain(HINSTANCE hInstance, HINSTANCE hPreviousInstance, LPSTR lpCmdLine, int n
     RegisterClassEx(&wndcls);
 
     mainWindow = CreateWindowEx(WS_EX_NOACTIVATE | WS_EX_TOPMOST | WS_EX_TRANSPARENT,
-                          APPLICATION_NAME "Window",
-                          APPLICATION_NAME,
-                          WS_POPUP | WS_BORDER,
-                          primaryRect.right - (1.5*WINDOW_SIZE),
-                          primaryRect.bottom - (1.5*WINDOW_SIZE),
-                          WINDOW_SIZE,
-                          WINDOW_SIZE,
-                          NULL,
-                          NULL,
-                          hInstance,
-                          NULL);
+                                APPLICATION_NAME "Window",
+                                APPLICATION_NAME,
+                                WS_POPUP | WS_BORDER,
+                                primaryRect.right - (1.5*WINDOW_SIZE),
+                                primaryRect.bottom - (1.5*WINDOW_SIZE),
+                                WINDOW_SIZE,
+                                WINDOW_SIZE,
+                                NULL,
+                                NULL,
+                                hInstance,
+                                NULL);
 
     NOTIFYICONDATA notifyIconData = {};
     notifyIconData.cbSize = sizeof(NOTIFYICONDATA);
@@ -74,7 +73,6 @@ WinMain(HINSTANCE hInstance, HINSTANCE hPreviousInstance, LPSTR lpCmdLine, int n
     notifyIconData.uFlags = NIF_ICON | NIF_TIP | NIF_MESSAGE;
     notifyIconData.uCallbackMessage = NOTIFY_ICON_EVENT;
     notifyIconData.hIcon = LoadIcon(hInstance, IDI_APPLICATION);
-
     Shell_NotifyIcon(NIM_ADD, &notifyIconData);
 
     HHOOK hook = SetWindowsHookEx(WH_KEYBOARD_LL, LowLevelKeyboardProc, hInstance, 0);
@@ -133,21 +131,15 @@ WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 LRESULT CALLBACK
 LowLevelKeyboardProc(int nCode, WPARAM wParam, LPARAM lParam)
 {
-    if (nCode < 0) goto exit;
+    if (nCode < 0) goto nextHook;
 
     if (wParam == WM_KEYUP)
     {
         KBDLLHOOKSTRUCT *kbdhook = (KBDLLHOOKSTRUCT *) lParam;
-        DWORD keyCode = kbdhook->vkCode;
-        switch (keyCode)
-        {
-        case 20:
-            DisplayKeyState(keyCode);
-            break;
-        }
+        DisplayKeyState(kbdhook->vkCode);
     }
 
-exit:
+nextHook:
     return CallNextHookEx(NULL, nCode, wParam, lParam);
 }
 
@@ -195,3 +187,4 @@ HideWindowTimerProc(HWND hwnd, UINT uMsg, UINT_PTR idEvent, DWORD dwTime)
     KillTimer(hwnd, HIDE_WINDOW_TIMER_EVENT);
     ShowWindow(hwnd, SW_HIDE);
 }
+
