@@ -7,6 +7,7 @@
 #define WINDOW_SIZE 80
 
 #define HIDE_WINDOW_TIMER_EVENT 0x1010
+#define HIDE_WINDOW_TIMER_INTERVAL 1000
 
 #define NOTIFY_ICON_EVENT WM_USER + 0x1011
 #define MENU_QUIT WM_USER + 0x1012
@@ -64,7 +65,7 @@ WinMain(HINSTANCE hInstance, HINSTANCE hPreviousInstance, LPSTR lpCmdLine, int n
                                 NULL,
                                 NULL,
                                 hInstance,
-                                NULL);
+                                (LPVOID)NULL);
 
     NOTIFYICONDATA notifyIconData = {};
     notifyIconData.cbSize = sizeof(NOTIFYICONDATA);
@@ -90,7 +91,7 @@ WinMain(HINSTANCE hInstance, HINSTANCE hPreviousInstance, LPSTR lpCmdLine, int n
         DispatchMessage(&messages);
     }
 
-    UnhookWindowsHookEx(&hook);
+    UnhookWindowsHookEx(hook);
     Shell_NotifyIcon(NIM_DELETE, &notifyIconData);
     UnregisterClass(APPLICATION_NAME "Window", hInstance);
 
@@ -157,7 +158,7 @@ DisplayKeyState(DWORD keyCode)
         }
         else
         {
-            SetTimer(mainWindow, HIDE_WINDOW_TIMER_EVENT, 1000, HideWindowTimerProc);
+            SetTimer(mainWindow, HIDE_WINDOW_TIMER_EVENT, HIDE_WINDOW_TIMER_INTERVAL, HideWindowTimerProc);
         }
         break;
     }
