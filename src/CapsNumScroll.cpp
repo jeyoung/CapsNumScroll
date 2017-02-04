@@ -12,13 +12,16 @@
 #define NOTIFY_ICON_EVENT WM_USER + 0x1011
 #define MENU_QUIT WM_USER + 0x1012
 
-static BOOL running;
+static HINSTANCE application;
 static HWND mainWindow;
+static NOTIFYICONDATA notifyIconData;
 static RECT primaryRect;
 static HMENU mainMenu;
+static char message[1024];
 
 // TODO Show images corresponding to keyboard state
 // TODO Show system tray icon
+// TODO Use UpdateLayeredWindow
 
 LRESULT CALLBACK
 WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam);
@@ -36,26 +39,50 @@ HideWindowTimerProc(HWND hwnd, UINT uMsg, UINT_PTR idEvent, DWORD dwTime);
 
 enum { CAPS_LOCK = 20, NUM_LOCK, SCROLL_LOCK };
 
-int CALLBACK
-WinMain(HINSTANCE hInstance, HINSTANCE, LPSTR, int)
+VOID 
+RegisterMainWindowClass()
 {
-    EnumDisplayMonitors(NULL, NULL, MonitorEnumProc, 0);
-
-    mainMenu = CreatePopupMenu();
-    AppendMenu(mainMenu, MF_ENABLED | MF_STRING, MENU_QUIT, "&Quit");
-
     WNDCLASSEX wndcls = {};
     wndcls.cbSize = sizeof(WNDCLASSEX);
     wndcls.style = CS_NOCLOSE;
-    wndcls.hIcon = LoadIcon(hInstance, IDI_APPLICATION);
-    wndcls.hInstance = hInstance;
+    wndcls.hIcon = LoadIcon(application, IDI_APPLICATION);
+    wndcls.hInstance = application;
     wndcls.lpfnWndProc = WindowProc;
     wndcls.lpszClassName = APPLICATION_NAME "Window";
 
     RegisterClassEx(&wndcls);
+}
+
+VOID
+CreateApplicationMenu()
+{
+    mainMenu = CreatePopupMenu();
+    AppendMenu(mainMenu, MF_ENABLED | MF_STRING, MENU_QUIT, "&Quit");
+}
+
+VOID
+CreateNotificationIcon()
+{
+    notifyIconData = {};
+    notifyIconData.cbSize = sizeof(NOTIFYICONDATA);
+    notifyIconData.hWnd = mainWindow;
+    strcpy(notifyIconData.szTip, APPLICATION_NAME);
+    notifyIconData.uFlags = NIF_ICON | NIF_TIP | NIF_MESSAGE;
+    notifyIconData.uCallbackMessage = NOTIFY_ICON_EVENT;
+    notifyIconData.hIcon = LoadIcon(application, IDI_APPLICATION);
+    Shell_NotifyIcon(NIM_ADD, &notifyIconData);
+}
+
+VOID
+CreateMainWindow()
+{
+    EnumDisplayMonitors(NULL, NULL, MonitorEnumProc, 0);
 
     int margin = (int)(1.5 * WINDOW_SIZE);
-    mainWindow = CreateWindowEx(WS_EX_NOACTIVATE | WS_EX_TOPMOST | WS_EX_TRANSPARENT,
+    mainWindow = CreateWindowEx(WS_EX_NOACTIVATE | WS_EX_TOPMOST,
+#if 0
+    mainWindow = CreateWindowEx(WS_EX_LAYERED | WS_EX_NOACTIVATE | WS_EX_TOPMOST,
+#endif
                                 APPLICATION_NAME "Window",
                                 APPLICATION_NAME,
                                 WS_POPUP | WS_BORDER,
@@ -65,29 +92,29 @@ WinMain(HINSTANCE hInstance, HINSTANCE, LPSTR, int)
                                 WINDOW_SIZE,
                                 NULL,
                                 NULL,
-                                hInstance,
+                                application,
                                 (LPVOID)NULL);
 
-    NOTIFYICONDATA notifyIconData = {};
-    notifyIconData.cbSize = sizeof(NOTIFYICONDATA);
-    notifyIconData.hWnd = mainWindow;
-    strcpy(notifyIconData.szTip, APPLICATION_NAME);
-    notifyIconData.uFlags = NIF_ICON | NIF_TIP | NIF_MESSAGE;
-    notifyIconData.uCallbackMessage = NOTIFY_ICON_EVENT;
-    notifyIconData.hIcon = LoadIcon(hInstance, IDI_APPLICATION);
-    Shell_NotifyIcon(NIM_ADD, &notifyIconData);
+    CreateApplicationMenu();
+}
 
-    HHOOK hook = SetWindowsHookEx(WH_KEYBOARD_LL, LowLevelKeyboardProc, hInstance, 0);
+int CALLBACK
+WinMain(HINSTANCE hInstance, HINSTANCE, LPSTR, int)
+{
+    application = hInstance;
 
+    RegisterMainWindowClass();
+    CreateMainWindow();
     ShowWindow(mainWindow, SW_HIDE);
     UpdateWindow(mainWindow);
 
-    running = TRUE;
-    while (running)
-    {
-        MSG messages;
-        GetMessage(&messages, mainWindow, 0, 0);
+    CreateNotificationIcon();
 
+    HHOOK hook = SetWindowsHookEx(WH_KEYBOARD_LL, LowLevelKeyboardProc, hInstance, 0);
+
+    MSG messages;
+    while (GetMessage(&messages, mainWindow, 0, 0))
+    {
         TranslateMessage(&messages);
         DispatchMessage(&messages);
     }
@@ -106,10 +133,18 @@ WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
     {
     case WM_CLOSE:
     case WM_DESTROY:
-        running = FALSE;
+        PostQuitMessage(0);
         break;
-    case WM_COMMAND:
-        running = LOWORD(wParam) != MENU_QUIT;
+    case WM_COMMAND: 
+        if (LOWORD(wParam) == MENU_QUIT) PostQuitMessage(0);
+        break;
+    case WM_PAINT:
+        {
+            PAINTSTRUCT ps;
+            HDC hdc = BeginPaint(mainWindow, &ps);
+            TextOut(hdc, 0, 0, message, 15);
+            EndPaint(mainWindow, &ps);
+        } 
         break;
     case NOTIFY_ICON_EVENT:
         if (LOWORD(lParam) == WM_RBUTTONUP)
@@ -152,15 +187,19 @@ DisplayKeyState(DWORD keyCode)
     switch (keyCode)
     {
     case CAPS_LOCK:
+        KillTimer(mainWindow, HIDE_WINDOW_TIMER_EVENT);
+        InvalidateRgn(mainWindow, NULL, TRUE);
         if (keyState)
         {
-            KillTimer(mainWindow, HIDE_WINDOW_TIMER_EVENT);
+            strcpy(message, "Caps: ON");
             ShowWindow(mainWindow, SW_SHOW);
         }
         else
         {
+            strcpy(message, "Caps: OFF");
             SetTimer(mainWindow, HIDE_WINDOW_TIMER_EVENT, HIDE_WINDOW_TIMER_INTERVAL, HideWindowTimerProc);
         }
+        UpdateWindow(mainWindow);
         break;
     }
 }
@@ -189,4 +228,3 @@ HideWindowTimerProc(HWND hwnd, UINT, UINT_PTR, DWORD)
     KillTimer(hwnd, HIDE_WINDOW_TIMER_EVENT);
     ShowWindow(hwnd, SW_HIDE);
 }
-

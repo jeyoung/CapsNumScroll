@@ -1,7 +1,9 @@
 @echo off
 mkdir ..\build
 pushd ..\build
-cl /Zi ..\src\CapsNumScroll.cpp shell32.lib user32.lib
+rc ..\src\CapsNumScroll.rc
+move ..\src\CapsNumScroll.res .\
+cl /Zi ..\src\CapsNumScroll.cpp gdi32.lib shell32.lib user32.lib .\CapsNumScroll.res
 popd
 
 
