@@ -7,7 +7,7 @@
 #define WINDOW_SIZE 75
 
 #define HIDE_WINDOW_TIMER_EVENT 0x1010
-#define HIDE_WINDOW_TIMER_INTERVAL 1000
+#define HIDE_WINDOW_TIMER_INTERVAL 0x0400
 
 #define NOTIFY_ICON_EVENT WM_USER + 0x1011
 #define MENU_QUIT WM_USER + 0x1012
@@ -44,7 +44,6 @@ RegisterMainWindowClass()
 {
     WNDCLASSEX wndcls = {};
     wndcls.cbSize = sizeof(WNDCLASSEX);
-    wndcls.style = CS_NOCLOSE;
     wndcls.hIcon = LoadIcon(application, IDI_APPLICATION);
     wndcls.hInstance = application;
     wndcls.lpfnWndProc = WindowProc;
@@ -57,7 +56,7 @@ VOID
 CreateApplicationMenu()
 {
     mainMenu = CreatePopupMenu();
-    AppendMenu(mainMenu, MF_ENABLED | MF_STRING, MENU_QUIT, "&Quit");
+    AppendMenu(mainMenu, MF_ENABLED | MF_STRING, MENU_QUIT, "E&xit");
 }
 
 VOID
@@ -94,8 +93,6 @@ CreateMainWindow()
                                 NULL,
                                 application,
                                 (LPVOID)NULL);
-
-    CreateApplicationMenu();
 }
 
 int CALLBACK
@@ -105,9 +102,11 @@ WinMain(HINSTANCE hInstance, HINSTANCE, LPSTR, int)
 
     RegisterMainWindowClass();
     CreateMainWindow();
+
     ShowWindow(mainWindow, SW_HIDE);
     UpdateWindow(mainWindow);
 
+    CreateApplicationMenu();
     CreateNotificationIcon();
 
     HHOOK hook = SetWindowsHookEx(WH_KEYBOARD_LL, LowLevelKeyboardProc, hInstance, 0);
@@ -129,6 +128,8 @@ WinMain(HINSTANCE hInstance, HINSTANCE, LPSTR, int)
 LRESULT CALLBACK
 WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 {
+    LRESULT result = TRUE;
+
     switch (uMsg)
     {
     case WM_CLOSE:
@@ -159,10 +160,10 @@ WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
         }
         break;
     default:
-        DefWindowProc(hwnd, uMsg, wParam, lParam);
+        result = DefWindowProc(hwnd, uMsg, wParam, lParam);
     }
 
-    return TRUE;
+    return result;
 }
 
 LRESULT CALLBACK
