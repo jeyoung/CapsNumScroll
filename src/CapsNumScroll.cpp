@@ -212,19 +212,21 @@ DisplayKeyState(DWORD keyCode)
     switch (keyCode)
     {
     case CAPS_LOCK:
-        KillTimer(hMainWindow, HIDE_WINDOW_TIMER_EVENT);
-        InvalidateRgn(hMainWindow, NULL, TRUE);
-        if (keyState)
         {
-            resourceId = CAPS_ON;
-            ShowWindow(hMainWindow, SW_SHOW);
+            KillTimer(hMainWindow, HIDE_WINDOW_TIMER_EVENT);
+            InvalidateRgn(hMainWindow, NULL, TRUE);
+            if (keyState)
+            {
+                resourceId = CAPS_ON;
+                ShowWindow(hMainWindow, SW_SHOW);
+            }
+            else
+            {
+                resourceId = CAPS_OFF;
+                SetTimer(hMainWindow, HIDE_WINDOW_TIMER_EVENT, HIDE_WINDOW_TIMER_INTERVAL, HideWindowTimerProc);
+            }
+            UpdateWindow(hMainWindow);
         }
-        else
-        {
-            resourceId = CAPS_OFF;
-            SetTimer(hMainWindow, HIDE_WINDOW_TIMER_EVENT, HIDE_WINDOW_TIMER_INTERVAL, HideWindowTimerProc);
-        }
-        UpdateWindow(hMainWindow);
         break;
     }
 }
