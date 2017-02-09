@@ -1,1 +1,10 @@
-0x1020 PNG "CapsLockIndicators.png"
+#include "resource.h"
+
+CAPS_ON BITMAP "CapsOn.bmp"
+CAPS_OFF BITMAP "CapsOff.bmp"
+NUM_ON BITMAP "NumOn.bmp"
+NUM_OFF BITMAP "NumOff.bmp"
+ICON128 ICON "CapsNumScroll128.ico"
+ICON64 ICON "CapsNumScroll64.ico"
+ICON32 ICON "CapsNumScroll32.ico"
+
