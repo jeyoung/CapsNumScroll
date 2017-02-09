@@ -73,7 +73,7 @@ CreateMainWindow()
 {
     EnumDisplayMonitors(NULL, NULL, MonitorEnumProc, 0);
 
-    int margin = (int)(1.5 * WINDOW_SIZE);
+    int width = primaryRect.right - primaryRect.left;
 #if 1
     hMainWindow = CreateWindowEx(WS_EX_NOACTIVATE | WS_EX_TOPMOST,
 #else
@@ -82,8 +82,8 @@ CreateMainWindow()
                                 APPLICATION_NAME "Window",
                                 APPLICATION_NAME,
                                 WS_POPUP | WS_BORDER,
-                                primaryRect.right - margin,
-                                primaryRect.bottom - margin,
+                                (int)(0.5 * (width - WINDOW_SIZE)),
+                                (int) (primaryRect.bottom - (1.5*WINDOW_SIZE)),
                                 WINDOW_SIZE,
                                 WINDOW_SIZE,
                                 NULL,
@@ -102,6 +102,8 @@ WinMain(HINSTANCE hInstance, HINSTANCE, LPSTR, int nCmdShow)
 
     ShowWindow(hMainWindow, SW_HIDE);
     UpdateWindow(hMainWindow);
+    
+    DisplayKeyState(CAPS_LOCK);
 
     CreateApplicationMenu();
     CreateNotificationIcon();
