@@ -3,7 +3,7 @@
 
 #define APPLICATION_NAME "CapsNumScroll"
 
-#define WINDOW_SIZE 75
+#define WINDOW_SIZE 60
 
 #define HIDE_WINDOW_TIMER_EVENT 0x1010
 #define HIDE_WINDOW_TIMER_INTERVAL 0x5A0
@@ -25,7 +25,8 @@ WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam);
 LRESULT CALLBACK
 LowLevelKeyboardProc(int nCode, WPARAM wParam, LPARAM lParam);
 
-VOID DisplayKeyState(DWORD);
+VOID 
+DisplayKeyState(DWORD);
 
 BOOL CALLBACK
 MonitorEnumProc(HMONITOR hMonitor, HDC hdcMonitor, LPRECT lprcMonitor, LPARAM dwData);
@@ -74,22 +75,18 @@ CreateMainWindow()
     EnumDisplayMonitors(NULL, NULL, MonitorEnumProc, 0);
 
     int width = primaryRect.right - primaryRect.left;
-#if 1
     hMainWindow = CreateWindowEx(WS_EX_NOACTIVATE | WS_EX_TOPMOST,
-#else
-    //hMainWindow = CreateWindowEx(WS_EX_LAYERED | WS_EX_NOACTIVATE | WS_EX_TOPMOST,
-#endif
-                                APPLICATION_NAME "Window",
-                                APPLICATION_NAME,
-                                WS_POPUP | WS_BORDER,
-                                (int)(0.5 * (width - WINDOW_SIZE)),
-                                (int) (primaryRect.bottom - (1.5*WINDOW_SIZE)),
-                                WINDOW_SIZE,
-                                WINDOW_SIZE,
-                                NULL,
-                                NULL,
-                                hMainInstance,
-                                (LPVOID)NULL);
+                                 APPLICATION_NAME "Window",
+                                 APPLICATION_NAME,
+                                 WS_POPUP | WS_BORDER,
+                                 (int)(0.5 * (width - WINDOW_SIZE)),
+                                 (int)(primaryRect.bottom - (1.5 * WINDOW_SIZE)),
+                                 WINDOW_SIZE,
+                                 WINDOW_SIZE,
+                                 NULL,
+                                 NULL,
+                                 hMainInstance,
+                                 (LPVOID)NULL);
 }
 
 int CALLBACK
@@ -165,9 +162,8 @@ WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
             EndPaint(hMainWindow, &ps);
 
             SetWindowLong(hMainWindow, 
-                    GWL_EXSTYLE, 
-                    GetWindowLong(hMainWindow, GWL_EXSTYLE) | WS_EX_LAYERED);
-
+                          GWL_EXSTYLE, 
+                          GetWindowLong(hMainWindow, GWL_EXSTYLE) | WS_EX_LAYERED);
             SetLayeredWindowAttributes(hMainWindow, 0, 255*0.9, LWA_ALPHA);
         } 
         break;
