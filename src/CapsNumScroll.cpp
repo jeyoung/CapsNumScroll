@@ -1,5 +1,5 @@
-#include <windows.h>
 #include "resource.h"
+#include <windows.h>
 
 #define APPLICATION_NAME "CapsNumScroll"
 
@@ -14,7 +14,7 @@
 static HINSTANCE hMainInstance;
 static HWND hMainWindow;
 static NOTIFYICONDATA notifyIconData;
-static RECT primaryRect;
+static RECT primaryMonitorRect;
 static HMENU hMainMenu;
 static HBITMAP hBitmap;
 static DWORD resourceId;
@@ -25,7 +25,7 @@ WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam);
 LRESULT CALLBACK
 LowLevelKeyboardProc(int nCode, WPARAM wParam, LPARAM lParam);
 
-VOID 
+VOID
 DisplayKeyState(DWORD);
 
 BOOL CALLBACK
@@ -36,7 +36,7 @@ HideWindowTimerProc(HWND hwnd, UINT uMsg, UINT_PTR idEvent, DWORD dwTime);
 
 enum { CAPS_LOCK = 20, NUM_LOCK = 144, SCROLL_LOCK };
 
-VOID 
+VOID
 RegisterMainWindowClass()
 {
     WNDCLASSEX wndcls = { 0 };
@@ -74,13 +74,13 @@ CreateMainWindow()
 {
     EnumDisplayMonitors(NULL, NULL, MonitorEnumProc, 0);
 
-    int width = primaryRect.right - primaryRect.left;
+    int width = primaryMonitorRect.right - primaryMonitorRect.left;
     hMainWindow = CreateWindowEx(WS_EX_NOACTIVATE | WS_EX_TOPMOST,
                                  APPLICATION_NAME "Window",
                                  APPLICATION_NAME,
                                  WS_POPUP | WS_BORDER,
                                  (int)(0.5 * (width - WINDOW_SIZE)),
-                                 (int)(primaryRect.bottom - (1.5 * WINDOW_SIZE)),
+                                 (int)(primaryMonitorRect.bottom - (1.5 * WINDOW_SIZE)),
                                  WINDOW_SIZE,
                                  WINDOW_SIZE,
                                  NULL,
@@ -99,7 +99,7 @@ WinMain(HINSTANCE hInstance, HINSTANCE, LPSTR, int nCmdShow)
 
     ShowWindow(hMainWindow, SW_HIDE);
     UpdateWindow(hMainWindow);
-    
+
     DisplayKeyState(CAPS_LOCK);
 
     CreateApplicationMenu();
@@ -132,12 +132,13 @@ WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
     case WM_DESTROY:
         PostQuitMessage(0);
         break;
-    case WM_COMMAND: 
-        if (LOWORD(wParam) == MENU_QUIT) PostQuitMessage(0);
+    case WM_COMMAND:
+        if (LOWORD(wParam) == MENU_QUIT)
+            PostQuitMessage(0);
         break;
     case WM_PAINT:
         {
-            hBitmap = LoadBitmap(hMainInstance, MAKEINTRESOURCE(resourceId)); 
+            hBitmap = LoadBitmap(hMainInstance, MAKEINTRESOURCE(resourceId));
 
             PAINTSTRUCT ps;
             HDC hdc = BeginPaint(hMainWindow, &ps);
@@ -149,11 +150,11 @@ WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
             GetObject(hBitmap, sizeof(BITMAP), &bitmap);
 
             SetStretchBltMode(hdc, HALFTONE);
-            StretchBlt(hdc, 
-                       0, 0, 
-                       WINDOW_SIZE, WINDOW_SIZE, 
-                       hdcMem, 
-                       0, 0, bitmap.bmWidth, bitmap.bmHeight, 
+            StretchBlt(hdc,
+                       0, 0,
+                       WINDOW_SIZE, WINDOW_SIZE,
+                       hdcMem,
+                       0, 0, bitmap.bmWidth, bitmap.bmHeight,
                        SRCCOPY);
 
             SelectObject(hdcMem, oldBitmap);
@@ -161,11 +162,11 @@ WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 
             EndPaint(hMainWindow, &ps);
 
-            SetWindowLong(hMainWindow, 
-                          GWL_EXSTYLE, 
+            SetWindowLong(hMainWindow,
+                          GWL_EXSTYLE,
                           GetWindowLong(hMainWindow, GWL_EXSTYLE) | WS_EX_LAYERED);
             SetLayeredWindowAttributes(hMainWindow, 0, 255*0.9, LWA_ALPHA);
-        } 
+        }
         break;
     case NOTIFY_ICON_EVENT:
         if (LOWORD(lParam) == WM_RBUTTONUP)
@@ -189,7 +190,8 @@ WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 LRESULT CALLBACK
 LowLevelKeyboardProc(int nCode, WPARAM wParam, LPARAM lParam)
 {
-    if (nCode < 0) goto nextHook;
+    if (nCode < 0)
+        goto nextHook;
 
     if (wParam == WM_KEYUP)
     {
@@ -235,7 +237,8 @@ MonitorEnumProc(HMONITOR hMonitor, HDC, LPRECT, LPARAM)
     GetMonitorInfo(hMonitor, &info);
 
     RECT tmp = info.rcWork;
-    if (info.dwFlags) primaryRect = tmp;
+    if (info.dwFlags)
+        primaryMonitorRect = tmp;
 
     return TRUE;
 }
